@@ -28,17 +28,59 @@
   <script type="text/babel">
 
     const handleResponse = (xhr) => {
+      const type = xhr.getResponseHeader('content-type');
 
+      const content = document.querySelector('#content');
+      content.appendChild(document.createElement('hr'));
+
+      const h1 = document.createElement('h1');
+      const p = document.createElement('p');
+      const h2 = document.createElement('h2');
+      const rawData = document.createElement('p');
+
+      h2.textContent = type;
+      rawData.textContent = xhr.response;
+
+      if(type === 'application/json') { // triple === does not do type casting
+        const obj = JSON.parse(xhr.response);
+
+        h1.textContent = `Name: ${obj.name}`;
+        p.textContent = `Age: ${obj.age}`;
+      } else if (type === 'text/xml') {
+        const name = xhr.responseXML.querySelector('name').textContent;
+        const age = xhr.responseXML.querySelector('age').textContent;
+
+        h1.textContent = `Name: ${name}`;
+        p.textContent = `Age: ${age}`;
+      }
+
+      content.appendChild(h1);
+      content.appendChild(p);
+      content.appendChild(h2);
+      content.appendChild(rawData);
     };
     
+    //Sends a request to the server
     const sendAjax = (url, acceptedType) => {
+      const xhr = new XMLHttpRequest();
 
+      xhr.open('GET', url); // Make a get request to a specified url
+      xhr.setRequestHeader('Accept', acceptedType); //Set headers
+
+      xhr.onload = () => handleResponse(xhr);
+
+      xhr.send();
     };
 
     const init = () => {
       const jsonButton = document.querySelector("#getCatsJSON");
       const xmlButton = document.querySelector("#getCatsXML");
+      
+      const sendJSON = () => sendAjax('/cats', 'application/json'); //sendJSON() == sendAjax
+      const sendXML = () => sendAjax('cats', 'text/xml');
 
+      jsonButton.addEventListener('click', sendJSON);
+      xmlButton.addEventListener('click', sendXML);
     };
 
     window.onload = init;
